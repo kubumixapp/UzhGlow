@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UzhGlow Admin</title>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_LwiXGQge-0zC1xqZFyeUmZWhKs4oYgY",
+            authDomain: "kubumixapp.firebaseapp.com",
+            databaseURL: "https://kubumixapp-default-rtdb.firebaseio.com",
+            projectId: "kubumixapp",
+            storageBucket: "kubumixapp.firebasestorage.app",
+            messagingSenderId: "6501395850",
+            appId: "1:6501395850:web:848d98df0eafb1aa0cec73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'UzhGlow'), (snapshot) => {
+            const list = document.getElementById('UzhGlowList');
+            const counter = document.getElementById('count');
+            list.innerHTML = "";
+            const data = snapshot.val();
+            
+            if (data) {
+                const entries = Object.entries(data).reverse();
+                counter.innerText = entries.length;
+                entries.forEach(([id, order]) => {
+                    const card = document.createElement('div');
+                    card.className = 'order-card';
+                    card.innerHTML = `
+                        <div class="card-side"></div>
+                        <div class="card-content">
+                            <div class="row-top">
+                                <span class="order-id">#${id.slice(-4).toUpperCase()}</span>
+                                <span class="order-date">${order.date ? order.date.split(',')[0] : ''}</span>
+                            </div>
+                            <h2 class="product-title">${order.product}</h2>
+                            <p class="customer-name">${order.firstName} ${order.lastName}</p>
+                            <div class="footer-actions">
+                                <a href="tel:${order.phone}" class="contact-link">
+                                    <span class="icon">📞</span> ${order.phone}
+                                </a>
+                                <button onclick="deleteOrder('${id}')" class="done-action">Завершити</button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            } else {
+                counter.innerText = "0";
+                list.innerHTML = "<div class='empty-state'>Нових замовлень немає.</div>";
+            }
+        });
+
+        window.deleteOrder = (id) => {
+            const card = event.target.closest('.order-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            setTimeout(() => remove(ref(db, 'UzhGlow/' + id)), 300);
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+        :root {
+            --bg: #fafafa;
+            --text: #111;
+            --accent: #111;
+            --border: #e5e5e5;
+            --secondary: #666;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header-lux {
+            max-width: 900px;
+            margin: 0 auto 60px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-lux h1 { font-weight: 600; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
+        .header-lux .status-info { font-size: 0.9rem; color: var(--secondary); }
+        #count { color: var(--text); font-weight: 600; }
+
+        #UzhGlowList {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid var(--border);
+            display: flex;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-card:hover { 
+            border-color: #000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        .card-side {
+            width: 4px;
+            background: #000;
+        }
+
+        .card-content {
+            padding: 30px;
+            width: 100%;
+        }
+
+        .row-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-id { font-size: 0.7rem; font-weight: 600; color: var(--secondary); letter-spacing: 1px; }
+        .order-date { font-size: 0.8rem; color: var(--secondary); }
+
+        .product-title { 
+            font-size: 1.6rem; 
+            font-weight: 400; 
+            margin-bottom: 5px; 
+            letter-spacing: -0.5px;
+        }
+
+        .customer-name { 
+            color: var(--secondary); 
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid #f9f9f9;
+        }
+
+        .contact-link {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .done-action {
+            background: none;
+            border: none;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            color: var(--secondary);
+            padding: 10px 0;
+            transition: 0.2s;
+        }
+
+        .done-action:hover { color: #000; }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            font-weight: 300;
+            color: var(--secondary);
+            letter-spacing: 1px;
+        }
+
+        @media (min-width: 768px) {
+            #UzhGlowList { grid-template-columns: 1fr 1fr; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-lux">
+        <div>
+            <h1>UzhGlow</h1>
+            <p style="font-size: 0.8rem; color: #999; margin-top: 5px;">Management Console</p>
+        </div>
+        <div class="status-info">
+            Активні запити: <span id="count">0</span>
+        </div>
+    </header>
+
+    <div id="UzhGlowList">
+        </div>
+
+</body>
+</html>
